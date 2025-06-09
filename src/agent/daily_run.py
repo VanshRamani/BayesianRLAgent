@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from discovery.paper_finder import PaperFinder
 from discovery.repo_finder import RepoFinder
 from analysis.belief_tracker import BeliefTracker, Evidence, EvidenceType
-from analysis.content_analyzer import ContentAnalyzer
+from analysis.llm_analyzer import LLMAnalyzer
 from reporting.daily_report import DailyReporter
 
 from datetime import datetime
@@ -20,13 +20,23 @@ from typing import List, Dict
 class BayesianRLAgent:
     """Main agent that orchestrates daily discovery and belief updates"""
     
-    def __init__(self, github_token: str = None):
+    def __init__(self, github_token: str = None, openai_api_key: str = None):
         print("🤖 Initializing Bayesian RL Agent...")
         
         self.paper_finder = PaperFinder()
         self.repo_finder = RepoFinder(github_token=github_token)
         self.belief_tracker = BeliefTracker()
-        self.content_analyzer = ContentAnalyzer()
+        
+        # Use LLM analyzer instead of regex-based analyzer
+        try:
+            self.content_analyzer = LLMAnalyzer(api_key=openai_api_key)
+            print("✅ LLM analyzer initialized with OpenAI API")
+        except ValueError as e:
+            print(f"❌ LLM analyzer initialization failed: {e}")
+            print("💡 Falling back to regex-based analyzer (less accurate)")
+            from analysis.content_analyzer import ContentAnalyzer
+            self.content_analyzer = ContentAnalyzer()
+        
         self.reporter = DailyReporter()
         
         print("✅ Agent initialized successfully!")
@@ -41,7 +51,8 @@ class BayesianRLAgent:
             "repos_found": 0,
             "beliefs_updated": 0,
             "new_techniques": 0,
-            "report_generated": False
+            "report_generated": False,
+            "analyzer_type": "LLM" if isinstance(self.content_analyzer, LLMAnalyzer) else "Regex"
         }
         
         try:
@@ -64,20 +75,36 @@ class BayesianRLAgent:
                 print(f"💾 Saved {len(repos)} repos to {repos_file}")
             
             # 3. Analyze content and extract evidence
-            print("\n🧠 Analyzing content and extracting evidence...")
+            print(f"\n🧠 Analyzing content with {cycle_results['analyzer_type']} analyzer...")
             evidence_list = []
             
             # Analyze papers for technique mentions and effectiveness indicators
-            for paper in papers:
-                paper_evidence = self.content_analyzer.analyze_paper(paper)
-                evidence_list.extend(paper_evidence)
+            for i, paper in enumerate(papers, 1):
+                print(f"   Analyzing paper {i}/{len(papers)}: {paper.title[:50]}...")
+                try:
+                    paper_evidence = self.content_analyzer.analyze_paper(paper)
+                    evidence_list.extend(paper_evidence)
+                    if paper_evidence:
+                        print(f"      ✅ Found {len(paper_evidence)} technique mentions")
+                    else:
+                        print(f"      ⚪ No techniques detected")
+                except Exception as e:
+                    print(f"      ❌ Error analyzing paper: {e}")
             
             # Analyze repos for technique adoption and popularity
-            for repo in repos:
-                repo_evidence = self.content_analyzer.analyze_repo(repo)
-                evidence_list.extend(repo_evidence)
+            for i, repo in enumerate(repos, 1):
+                print(f"   Analyzing repo {i}/{len(repos)}: {repo.name}...")
+                try:
+                    repo_evidence = self.content_analyzer.analyze_repo(repo)
+                    evidence_list.extend(repo_evidence)
+                    if repo_evidence:
+                        print(f"      ✅ Found {len(repo_evidence)} technique mentions")
+                    else:
+                        print(f"      ⚪ No techniques detected")
+                except Exception as e:
+                    print(f"      ❌ Error analyzing repo: {e}")
             
-            print(f"📊 Extracted {len(evidence_list)} pieces of evidence")
+            print(f"📊 Extracted {len(evidence_list)} pieces of evidence total")
             
             # 4. Update beliefs
             print("\n🎯 Updating beliefs...")
@@ -85,6 +112,7 @@ class BayesianRLAgent:
             
             for evidence in evidence_list:
                 self.belief_tracker.update_belief(evidence)
+                print(f"   Updated {evidence.technique}: {evidence.value:.3f} (conf: {evidence.confidence:.3f})")
             
             techniques_after = len(self.belief_tracker.beliefs)
             cycle_results["beliefs_updated"] = len(evidence_list)
@@ -126,6 +154,7 @@ class BayesianRLAgent:
         print(f"🔍 Repositories found: {results['repos_found']}")
         print(f"🎯 Beliefs updated: {results['beliefs_updated']}")
         print(f"✨ New techniques tracked: {results['new_techniques']}")
+        print(f"🤖 Analyzer used: {results['analyzer_type']}")
         print(f"📄 Report generated: {'✅' if results['report_generated'] else '❌'}")
         
         # Show current top beliefs
@@ -133,12 +162,14 @@ class BayesianRLAgent:
         if "most_promising" in summary and summary["most_promising"]:
             print(f"\n🚀 Most promising techniques:")
             for i, tech in enumerate(summary["most_promising"][:5], 1):
-                print(f"   {i}. {tech}")
+                belief = self.belief_tracker.beliefs[tech]
+                print(f"   {i}. {tech} (effectiveness: {belief.mean_effectiveness:.3f})")
         
         if "most_overhyped" in summary and summary["most_overhyped"]:
             print(f"\n😮‍💨 Most overhyped techniques:")
             for i, tech in enumerate(summary["most_overhyped"][:3], 1):
-                print(f"   {i}. {tech}")
+                belief = self.belief_tracker.beliefs[tech]
+                print(f"   {i}. {tech} (effectiveness: {belief.mean_effectiveness:.3f})")
         
         print("\n✅ Daily cycle completed successfully!")
         print("="*50)
@@ -150,12 +181,17 @@ def main():
     
     parser = argparse.ArgumentParser(description="Run Bayesian RL Agent daily cycle")
     parser.add_argument("--github-token", type=str, help="GitHub API token for higher rate limits")
+    parser.add_argument("--openai-api-key", type=str, help="OpenAI API key for LLM analysis")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     
     args = parser.parse_args()
     
+    # Get API keys from environment if not provided
+    github_token = args.github_token or os.getenv('GITHUB_TOKEN')
+    openai_key = args.openai_api_key or os.getenv('OPENAI_API_KEY')
+    
     # Initialize and run agent
-    agent = BayesianRLAgent(github_token=args.github_token)
+    agent = BayesianRLAgent(github_token=github_token, openai_api_key=openai_key)
     results = agent.run_daily_cycle()
     
     # Exit with appropriate code

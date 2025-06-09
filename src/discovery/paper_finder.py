@@ -5,7 +5,7 @@ Paper discovery module - finds new RL papers from various sources
 import arxiv
 import requests
 import feedparser
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 import json
 import os
@@ -59,7 +59,8 @@ class PaperFinder:
     def find_arxiv_papers(self, days_back: int = 7) -> List[Paper]:
         """Find recent RL papers on ArXiv"""
         papers = []
-        cutoff_date = datetime.now() - timedelta(days=days_back)
+        # Make cutoff_date timezone-aware to match ArXiv API
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_back)
         
         # Search for recent papers in relevant categories
         for category in self.arxiv_categories:

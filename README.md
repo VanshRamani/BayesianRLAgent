@@ -1,150 +1,81 @@
 # Bayesian RL Agent
 
-Bayesian reinforcement learning agent that tracks technique effectiveness through probabilistic belief updating.
+Bayesian reinforcement learning agent that tracks technique effectiveness through probabilistic belief updating using **real research papers and LLM analysis**.
 
 ## Implementation
 
 **Core System:**
 - Beta distribution belief tracking for RL technique effectiveness
-- Bayesian evidence integration from papers and repositories
-- Content analysis using regex pattern matching and sentiment scoring
-- Daily report generation with belief summaries
+- Bayesian evidence integration from **real ArXiv papers and GitHub repositories**
+- **LLM-powered content analysis** using OpenAI GPT-4o-mini for technique effectiveness assessment
+- Daily report generation with belief summaries and confidence intervals
 
 **Dependencies:**
 - `numpy`, `scipy` for statistical computations
-- `arxiv` API for paper discovery
-- `PyGithub` for repository analysis
+- `arxiv` API for real paper discovery
+- `PyGithub` for repository analysis  
 - `pandas` for data handling
+- `requests` for OpenAI API integration
+
+## What's Working Now
+
+**✅ Real Implementation (No More Mock Data):**
+
+- **ArXiv Integration** - Fetches 50+ real RL papers from recent research
+- **LLM Analysis** - GPT-4o-mini extracts technique effectiveness from paper content
+- **Bayesian Beliefs** - Evidence integration with uncertainty quantification
+- **Statistical Comparisons** - Probabilistic technique rankings
+- **Data Persistence** - Belief state and paper data saving
+
+**Test commands:**
+```bash
+# Test ArXiv API (gets real papers)
+python test_arxiv.py                     # Shows 3 real papers from ArXiv
+
+# Run with real papers + LLM analysis (requires OpenAI API key)
+export OPENAI_API_KEY="your-key-here"
+python real_demo.py                      # Analyzes real papers with LLM
+
+# Fallback demo with mock data (no API key needed)
+python simple_demo.py                    # Uses hardcoded evidence
+
+# View current beliefs
+python -m src.analysis.view_beliefs      # Shows tracked techniques
+```
+
+## LLM-Based Analysis
+
+**Replaces regex pattern matching with:**
+
+- **OpenAI GPT-4o-mini** for content understanding
+- **Effectiveness scoring** (0.0-1.0) based on paper results
+- **Confidence assessment** from LLM + metadata factors
+- **Reasoning capture** - LLM explains its assessments
+
+**Scoring Guidelines:**
+- 0.9-1.0: Breakthrough results, SOTA performance
+- 0.7-0.9: Strong positive results, clearly effective  
+- 0.5-0.7: Moderate effectiveness, mixed results
+- 0.3-0.5: Limited effectiveness, significant limitations
+- 0.0-0.3: Poor performance, major issues
 
 ## Workflow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     DAILY AGENT ORCHESTRATION                  │
-│                     (src/agent/daily_run.py)                   │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    DISCOVERY PHASE                             │
-├─────────────────────────────────────────────────────────────────┤
-│  PAPER FINDER                │  REPOSITORY FINDER              │
-│  (src/discovery/             │  (src/discovery/                │
-│   paper_finder.py)           │   repo_finder.py)               │
-│                              │                                 │
-│  • ArXiv API search          │  • GitHub API search            │
-│  • Categories: cs.LG,        │  • Topics: reinforcement-       │
-│    cs.AI, stat.ML, cs.RO     │    learning, drl, ppo, etc.     │
-│  • Keywords: "reinforcement  │  • Query: recent repos with     │
-│    learning", "policy        │    stars > threshold            │
-│    gradient", "q-learning"   │  • Extract: stars, forks,       │
-│  • Filter: last 2-7 days     │    language, topics             │
-│  • Output: Paper objects     │  • Output: Repository objects   │
-└─────────────────────────────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   CONTENT ANALYSIS                             │
-│                (src/analysis/content_analyzer.py)              │
-├─────────────────────────────────────────────────────────────────┤
-│  TECHNIQUE EXTRACTION                                           │
-│  • Regex patterns for 23 RL techniques:                        │
-│    - PPO: r"ppo", r"proximal policy optimization"              │
-│    - SAC: r"\bsac\b", r"soft actor.?critic"                    │
-│    - DQN: r"\bdqn\b", r"deep q.?network"                       │
-│    - TD3, A3C, TRPO, Rainbow, etc.                             │
-│                                                                 │
-│  EFFECTIVENESS SCORING                                          │
-│  Papers: Sentiment analysis                                     │
-│  • Positive indicators: "state-of-the-art", "outperform"       │
-│  • Negative indicators: "fail", "unstable", "limitation"       │
-│  • Numerical extraction: score/reward/performance patterns     │
-│  • Context adjustments: SOTA bonus, baseline penalty           │
-│                                                                 │
-│  Repositories: Popularity metrics                               │
-│  • Star score: log10(stars+1)/4 (capped at 0.8)               │
-│  • Fork ratio: forks/stars * 2 (max 0.2 bonus)                │
-│  • Recency: last updated within 7/30 days                      │
-│                                                                 │
-│  CONFIDENCE CALCULATION                                         │
-│  Papers: author count + recency + venue + abstract length      │
-│  Repos: star count + description quality + language + activity │
-│                                                                 │
-│  Output: Evidence objects (technique, value, confidence)       │
-└─────────────────────────────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  BAYESIAN BELIEF TRACKING                      │
-│                 (src/analysis/belief_tracker.py)               │
-├─────────────────────────────────────────────────────────────────┤
-│  BELIEF INITIALIZATION                                          │
-│  • New techniques: Beta(α=2, β=2) - weakly optimistic prior    │
-│  • Load existing beliefs from data/beliefs/latest.json         │
-│                                                                 │
-│  EVIDENCE INTEGRATION                                           │
-│  • For evidence with value v, confidence c:                    │
-│    if v > 0.5:                                                 │
-│      α += c × (v - 0.5) × 2     # positive evidence            │
-│      β += c × (1 - v) × 2       # residual negative            │
-│    else:                                                       │
-│      α += c × v × 2             # weak positive                │
-│      β += c × (0.5 - v) × 2     # negative evidence            │
-│                                                                 │
-│  BELIEF PROPERTIES                                              │
-│  • Effectiveness: α/(α+β)                                      │
-│  • Uncertainty: sqrt(αβ/((α+β)²(α+β+1)))                      │
-│  • Certainty: min(1.0, (α+β)/100)                             │
-│  • Confidence interval: Beta distribution quantiles            │
-│                                                                 │
-│  TECHNIQUE RANKING                                              │
-│  • Sort by effectiveness with certainty filter                 │
-│  • Statistical comparisons via Monte Carlo sampling            │
-│  • Overhype detection: high certainty + low effectiveness      │
-│                                                                 │
-│  Output: Updated beliefs saved to timestamped JSON             │
-└─────────────────────────────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     REPORT GENERATION                          │
-│                 (src/reporting/daily_report.py)                │
-├─────────────────────────────────────────────────────────────────┤
-│  MARKDOWN REPORT                                                │
-│  • Executive summary with counts                               │
-│  • Top 5 promising techniques with confidence intervals        │
-│  • Overhyped techniques (high certainty, low effectiveness)    │
-│  • Uncertain techniques needing more evidence                  │
-│  • Full effectiveness ranking table                            │
-│  • Discovered papers (top 5 by recency)                        │
-│  • Discovered repositories (top 5 by stars)                    │
-│  • Evidence breakdown by technique                             │
-│                                                                 │
-│  JSON DATA EXPORT                                               │
-│  • Raw paper/repo/evidence objects                             │
-│  • Belief summaries and cycle results                          │
-│  • Timestamped for historical tracking                         │
-│                                                                 │
-│  Output: reports/daily_report_YYYY-MM-DD.md                    │
-│          reports/daily_data_YYYY-MM-DD.json                    │
-└─────────────────────────────────────────────────────────────────┘
+ArXiv Papers → LLM Analysis → Evidence Extraction → Bayesian Update → Reports
+     ↓              ↓                ↓                   ↓            ↓
+  Real research   GPT-4o-mini    Effectiveness      Beta params    Daily MD
+  (50+ papers)    assessment     scores + conf      α,β update     + JSON data
 ```
 
-## What's Working Now
+## Architecture
 
-Verified components:
-
-- ✅ **Core belief tracking** - Beta distribution updates with evidence integration
-- ✅ **Evidence processing** - 28 evidence points processed across 6 RL techniques  
-- ✅ **Statistical comparisons** - Probabilistic technique rankings with uncertainty
-- ✅ **Data persistence** - Belief state saving/loading in JSON format
-- ✅ **Paper discovery** - ArXiv API integration for RL paper search
-- ✅ **Content analysis** - Regex-based technique extraction from text
-
-**Test commands:**
-```bash
-python simple_demo.py                    # Works - processes 14 evidence items
-python -m src.analysis.view_beliefs      # Works - shows 6 tracked techniques  
+```
+src/
+├── discovery/     # ArXiv/GitHub real data collection
+├── analysis/      # LLM analyzer + Bayesian tracker  
+├── agent/         # Daily orchestration (supports both LLM + fallback)
+└── reporting/     # Markdown report generation
 ```
 
 ## Technical Approach
@@ -162,6 +93,13 @@ effectiveness = α/(α+β)
 uncertainty = sqrt(αβ/((α+β)²(α+β+1)))
 ```
 
+**LLM Integration:**
+```
+Paper → GPT-4o-mini → {technique, score, confidence, reasoning}
+Evidence = LLM_score × paper_confidence
+Belief_update(Evidence)
+```
+
 ## Usage
 
 ```bash
@@ -170,21 +108,17 @@ python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install numpy scipy pandas arxiv PyGithub requests
 
-# Run daily agent
-python -m src.agent.daily_run
+# Set OpenAI API key for LLM analysis
+export OPENAI_API_KEY="your-openai-api-key"
+
+# Run real paper analysis (recommended)
+python real_demo.py
+
+# Run daily agent with LLM
+python -m src.agent.daily_run --openai-api-key="your-key"
 
 # Generate reports
 python -m src.reporting.daily_report
-```
-
-## Architecture
-
-```
-src/
-├── discovery/     # ArXiv/GitHub data collection
-├── analysis/      # Bayesian belief tracking  
-├── agent/         # Orchestration logic
-└── reporting/     # Markdown report generation
 ```
 
 ## References
