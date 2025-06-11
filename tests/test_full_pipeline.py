@@ -16,8 +16,12 @@ def test_full_pipeline():
     print("🚀 Testing Full Pipeline: ArXiv → Gemini → Bayesian Beliefs")
     print("=" * 70)
     
-    # API key
-    api_key = "AIzaSyBYm3cNe9HgUFPTsokMADs2xrF8XT93iuw"
+    # Get API key from environment
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        print("❌ Error: GEMINI_API_KEY environment variable required!")
+        print("Set environment variable: export GEMINI_API_KEY='your-key-here'")
+        return False
     
     try:
         # 1. Initialize components

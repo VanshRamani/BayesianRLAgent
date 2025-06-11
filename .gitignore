@@ -83,4 +83,12 @@ Thumbs.db
 # Project specific
 data/
 reports/
-*.log 
+*.log
+
+# Security - API keys and secrets
+*.key
+*.secret
+config.ini
+secrets.json
+api_keys.txt
+credentials.json 

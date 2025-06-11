@@ -13,8 +13,12 @@ def test_gemini_basic():
     """Test basic Gemini API functionality"""
     print("🤖 Testing Gemini API...")
     
-    # Set API key
-    api_key = "AIzaSyBYm3cNe9HgUFPTsokMADs2xrF8XT93iuw"
+    # Get API key from environment
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        print("❌ Error: GEMINI_API_KEY environment variable required!")
+        print("Set environment variable: export GEMINI_API_KEY='your-key-here'")
+        return False, {}
     
     try:
         analyzer = GeminiAnalyzer(api_key=api_key)

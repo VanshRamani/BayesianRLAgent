@@ -19,9 +19,9 @@ Bayesian reinforcement learning agent that tracks technique effectiveness throug
 
 ## What's Working Now
 
-**✅ Real Implementation (No More Mock Data):**
+**✅ Current Implementation:**
 
-- **ArXiv Integration** - Fetches 59+ real RL papers from recent research
+- **ArXiv Integration** - Fetches real RL papers from recent research
 - **Gemini AI Analysis** - Google Gemini 1.5 Flash extracts technique effectiveness from paper content
 - **Bayesian Beliefs** - Evidence integration with uncertainty quantification
 - **Statistical Comparisons** - Probabilistic technique rankings
@@ -29,8 +29,8 @@ Bayesian reinforcement learning agent that tracks technique effectiveness throug
 
 **Test commands:**
 ```bash
-# Set Gemini API key
-export GEMINI_API_KEY="AIzaSyBYm3cNe9HgUFPTsokMADs2xrF8XT93iuw"
+# Set Gemini API key (required)
+export GEMINI_API_KEY="your_gemini_api_key_here"
 
 # Run complete test suite
 python tests/run_all_tests.py            # Tests all components
@@ -116,6 +116,10 @@ Belief_update(Evidence)
 python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
+
+# Copy environment template and add your API keys
+cp env.example .env
+# Edit .env file with your actual API keys
 
 # Set Gemini API key for LLM analysis
 export GEMINI_API_KEY="your-gemini-api-key"
