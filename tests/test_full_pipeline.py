@@ -5,11 +5,14 @@ Test full pipeline: ArXiv papers → Gemini analysis → Bayesian beliefs
 
 import sys
 import os
+from dotenv import load_dotenv
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from discovery.paper_finder import PaperFinder
 from analysis.gemini_analyzer import GeminiAnalyzer
 from analysis.belief_tracker import BeliefTracker
+
+load_dotenv()
 
 def test_full_pipeline():
     """Test complete pipeline with real papers and Gemini"""
