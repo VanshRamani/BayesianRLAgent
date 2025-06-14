@@ -5,11 +5,14 @@ Test Bayesian belief tracking functionality
 
 import sys
 import os
+from dotenv import load_dotenv
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from analysis.belief_tracker import BeliefTracker, Evidence, EvidenceType
 from datetime import datetime
 import numpy as np
+
+load_dotenv()
 
 def test_belief_tracking():
     """Test Bayesian belief tracking with sample evidence"""

@@ -5,9 +5,12 @@ Test Gemini API functionality
 
 import sys
 import os
+from dotenv import load_dotenv
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from analysis.gemini_analyzer import GeminiAnalyzer
+
+load_dotenv()
 
 def test_gemini_basic():
     """Test basic Gemini API functionality"""

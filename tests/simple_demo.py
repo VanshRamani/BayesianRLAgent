@@ -6,12 +6,15 @@ Simplified demo for Bayesian RL Agent - shows core belief tracking without exter
 import sys
 import os
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 # Add src to path
 sys.path.append('src')
 
 from analysis.belief_tracker import BeliefTracker, Evidence, EvidenceType
 import json
+
+load_dotenv()
 
 
 def run_simple_demo():

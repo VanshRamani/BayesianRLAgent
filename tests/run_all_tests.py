@@ -5,7 +5,10 @@ Run all tests to verify the complete Bayesian RL Agent system
 
 import sys
 import os
+from dotenv import load_dotenv
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+load_dotenv()
 
 def run_all_tests():
     """Run complete test suite"""

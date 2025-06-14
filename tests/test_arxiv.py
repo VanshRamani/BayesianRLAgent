@@ -5,9 +5,12 @@ Test ArXiv API functionality
 
 import sys
 import os
+from dotenv import load_dotenv
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from discovery.paper_finder import PaperFinder
+
+load_dotenv()
 
 def test_arxiv_basic():
     """Test basic ArXiv functionality"""

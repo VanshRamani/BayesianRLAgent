@@ -6,6 +6,7 @@ Real demo for Bayesian RL Agent - uses actual ArXiv papers with LLM analysis
 import sys
 import os
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 # Add src to path
 sys.path.append('src')
@@ -15,6 +16,7 @@ from analysis.llm_analyzer import LLMAnalyzer
 from discovery.paper_finder import PaperFinder
 import json
 
+load_dotenv()
 
 def run_real_demo():
     """Run demo with real ArXiv papers and LLM analysis"""
